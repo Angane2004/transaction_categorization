@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   
   // Performance optimizations
-  swcMinify: true,
+  // Note: swcMinify is enabled by default in Next.js 13+ and removed as an option
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? {
       exclude: ["error", "warn"],
@@ -24,9 +24,8 @@ const nextConfig: NextConfig = {
   },
   
   // Production optimizations
-  ...(process.env.NODE_ENV === "production" && {
-    output: "standalone",
-  }),
+  // Note: standalone output is useful for Docker deployments, but may not be needed for Vercel
+  // Vercel handles optimization automatically
 };
 
 export default nextConfig;
