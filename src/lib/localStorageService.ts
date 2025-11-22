@@ -31,7 +31,10 @@ const getUserKey = (baseKey: string, userId?: string): string => {
     if (userId) {
         return `${baseKey}_${userId}`;
     }
-    // Try to get from session if not provided
+    // Try to get from session if not provided (only on client side)
+    if (typeof window === 'undefined') {
+        return baseKey;
+    }
     try {
         const session = localStorage.getItem('transactai_auth_session');
         if (session) {
@@ -56,6 +59,7 @@ const STORAGE_KEYS = {
 // User Profile Operations
 export const userService = {
     saveProfile(profile: UserProfile, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const data = {
             ...profile,
             updatedAt: new Date().toISOString(),
@@ -65,6 +69,7 @@ export const userService = {
     },
 
     getProfile(userId?: string): UserProfile | null {
+        if (typeof window === 'undefined') return null;
         const key = getUserKey(STORAGE_KEYS.USER_PROFILE, userId);
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : null;
@@ -81,12 +86,14 @@ export const userService = {
 // Transaction Operations
 export const transactionService = {
     getAll(userId?: string): Transaction[] {
+        if (typeof window === 'undefined') return [];
         const key = getUserKey(STORAGE_KEYS.TRANSACTIONS, userId);
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
     },
 
     save(transaction: Transaction, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const transactions = this.getAll(userId);
         transactions.push(transaction);
         const key = getUserKey(STORAGE_KEYS.TRANSACTIONS, userId);
@@ -94,11 +101,13 @@ export const transactionService = {
     },
 
     saveMany(transactions: Transaction[], userId?: string): void {
+        if (typeof window === 'undefined') return;
         const key = getUserKey(STORAGE_KEYS.TRANSACTIONS, userId);
         localStorage.setItem(key, JSON.stringify(transactions));
     },
 
     update(id: string, updates: Partial<Transaction>, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const transactions = this.getAll(userId);
         const index = transactions.findIndex(t => t.id === id);
         if (index !== -1) {
@@ -109,6 +118,7 @@ export const transactionService = {
     },
 
     delete(id: string, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const transactions = this.getAll(userId);
         const filtered = transactions.filter(t => t.id !== id);
         const key = getUserKey(STORAGE_KEYS.TRANSACTIONS, userId);
@@ -130,12 +140,14 @@ export const transactionService = {
 // Category Operations
 export const categoryService = {
     getAll(userId?: string): Category[] {
+        if (typeof window === 'undefined') return [];
         const key = getUserKey(STORAGE_KEYS.CATEGORIES, userId);
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
     },
 
     add(categoryName: string, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const categories = this.getAll(userId);
         if (!categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase())) {
             categories.push({
@@ -148,6 +160,7 @@ export const categoryService = {
     },
 
     remove(categoryName: string, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const categories = this.getAll(userId);
         const filtered = categories.filter(c => c.name !== categoryName);
         const key = getUserKey(STORAGE_KEYS.CATEGORIES, userId);
@@ -162,27 +175,32 @@ export const categoryService = {
 // PIN Operations (per user)
 export const pinService = {
     save(pin: string, userId?: string): void {
+        if (typeof window === 'undefined') return;
         const key = userId ? `${STORAGE_KEYS.PIN}_${userId}` : STORAGE_KEYS.PIN;
         localStorage.setItem(key, pin);
     },
 
     verify(pin: string, userId?: string): boolean {
+        if (typeof window === 'undefined') return false;
         const key = userId ? `${STORAGE_KEYS.PIN}_${userId}` : STORAGE_KEYS.PIN;
         const savedPin = localStorage.getItem(key);
         return savedPin === pin;
     },
 
     exists(userId?: string): boolean {
+        if (typeof window === 'undefined') return false;
         const key = userId ? `${STORAGE_KEYS.PIN}_${userId}` : STORAGE_KEYS.PIN;
         return !!localStorage.getItem(key);
     },
 
     remove(userId?: string): void {
+        if (typeof window === 'undefined') return;
         const key = userId ? `${STORAGE_KEYS.PIN}_${userId}` : STORAGE_KEYS.PIN;
         localStorage.removeItem(key);
     },
 
     get(userId?: string): string | null {
+        if (typeof window === 'undefined') return null;
         const key = userId ? `${STORAGE_KEYS.PIN}_${userId}` : STORAGE_KEYS.PIN;
         return localStorage.getItem(key);
     },
@@ -191,6 +209,7 @@ export const pinService = {
 // Auth Session Operations
 export const authService = {
     saveSession(phone: string): void {
+        if (typeof window === 'undefined') return;
         const session = {
             phone,
             timestamp: new Date().toISOString(),
@@ -199,19 +218,19 @@ export const authService = {
     },
 
     getSession(): { phone: string; timestamp: string } | null {
+        if (typeof window === 'undefined') return null;
         const data = localStorage.getItem(STORAGE_KEYS.AUTH_SESSION);
         return data ? JSON.parse(data) : null;
     },
 
     clearSession(): void {
+        if (typeof window === 'undefined') return;
         const session = this.getSession();
         if (session) {
             // Clear user-specific unlock flag
             const phone = session.phone.replace(/\+/g, "");
             const unlockKey = `app_unlocked_${phone}`;
-            if (typeof window !== 'undefined') {
-                sessionStorage.removeItem(unlockKey);
-            }
+            sessionStorage.removeItem(unlockKey);
         }
         localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
     },
@@ -270,6 +289,7 @@ export const generateSimulatedTransactions = (count: number = 50): Transaction[]
 
 // Initialize with simulated data if no data exists (per user)
 export const initializeData = (userId?: string) => {
+    if (typeof window === 'undefined') return;
     if (transactionService.getAll(userId).length === 0) {
         const simulated = generateSimulatedTransactions(50);
         transactionService.saveMany(simulated, userId);

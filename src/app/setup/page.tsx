@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,8 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { localAuth } from "@/lib/localStorage";
-import { userService, UserProfile } from "@/lib/localStorageService";
+import { authService, userService, UserProfile } from "@/lib/localStorageService";
 
 const formSchema = z.object({
     firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -38,6 +37,7 @@ const formSchema = z.object({
 export default function SetupPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [phoneNumber, setPhoneNumber] = useState<string>("+91 99999 99999");
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -52,7 +52,7 @@ export default function SetupPage() {
         setLoading(true);
 
         try {
-            const session = localAuth.getSession();
+            const session = authService.getSession();
             const phone = session?.phone || "+919999999999";
 
             // Create profile object
@@ -154,7 +154,7 @@ export default function SetupPage() {
 
                             <div className="pt-4">
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Phone Number</label>
-                                <Input value={localAuth.getSession()?.phone || "+91 99999 99999"} disabled className="mt-2 bg-muted" />
+                                <Input value={phoneNumber} disabled className="mt-2 bg-muted" />
                             </div>
 
                             <Button type="submit" className="w-full" disabled={loading}>
