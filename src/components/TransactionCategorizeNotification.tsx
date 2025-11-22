@@ -84,7 +84,7 @@ export function TransactionCategorizeNotification({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="fixed top-4 right-4 z-50 w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-800 p-4 space-y-4"
+                    className="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-4 z-50 w-[calc(100%-2rem)] max-w-md bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow-2xl border-2 border-yellow-200 dark:border-yellow-800 p-4 space-y-4"
                 >
                     <div className="flex items-start justify-between">
                         <div className="flex-1">

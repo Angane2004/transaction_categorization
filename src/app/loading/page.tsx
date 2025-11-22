@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
-import { initializeData, authService } from "@/lib/localStorageService";
+import { initializeData, authService, userService } from "@/lib/localStorageService";
 
 export default function LoadingPage() {
     const router = useRouter();

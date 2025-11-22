@@ -12,6 +12,8 @@ export function PinLock({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+        
         const session = authService.getSession();
         if (session) {
             const phone = session.phone.replace(/\+/g, "");
@@ -25,9 +27,12 @@ export function PinLock({ children }: { children: React.ReactNode }) {
                 if (!isUnlocked) {
                     setIsLocked(true);
                     // Redirect to unlock page
-                    router.push("/unlock");
+                    router.replace("/unlock");
                 }
             }
+        } else {
+            // No session - redirect to login
+            router.replace("/login");
         }
     }, [router]);
 

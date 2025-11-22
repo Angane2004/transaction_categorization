@@ -54,6 +54,7 @@ const STORAGE_KEYS = {
     CATEGORIES: 'transactai_categories',
     PIN: 'transactai_pin',
     AUTH_SESSION: 'transactai_auth_session',
+    ONBOARDING_COMPLETE: 'transactai_onboarding_complete',
 };
 
 // User Profile Operations
@@ -233,6 +234,24 @@ export const authService = {
             sessionStorage.removeItem(unlockKey);
         }
         localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
+    },
+};
+
+// Onboarding Operations
+export const onboardingService = {
+    markComplete(): void {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
+    },
+
+    isComplete(): boolean {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETE) === 'true';
+    },
+
+    reset(): void {
+        if (typeof window === 'undefined') return;
+        localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETE);
     },
 };
 

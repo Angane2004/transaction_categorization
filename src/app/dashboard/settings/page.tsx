@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { pinService, userService, authService } from "@/lib/localStorageService";
+import { ArrowLeft } from "lucide-react";
 
 export default function SettingsPage() {
+    const router = useRouter();
     const [pin, setPin] = useState("");
     const [confirmPin, setConfirmPin] = useState("");
     const [isPinEnabled, setIsPinEnabled] = useState(false);
@@ -42,6 +45,10 @@ export default function SettingsPage() {
             toast.success("App Lock enabled successfully");
             setPin("");
             setConfirmPin("");
+            // Refresh the page to update PIN reminder on dashboard
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } catch (error) {
             console.error("Error saving PIN:", error);
             toast.error("Failed to save PIN");
@@ -114,6 +121,20 @@ export default function SettingsPage() {
                                 <Button onClick={handleSavePin}>Save PIN</Button>
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+
+                {/* Back to Dashboard Button */}
+                <Card className="col-span-2">
+                    <CardContent className="pt-6">
+                        <Button
+                            onClick={() => router.push("/dashboard")}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Dashboard
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

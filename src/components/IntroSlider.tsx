@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
+import { onboardingService } from "@/lib/localStorageService";
 
 const slides = [
     {
@@ -35,6 +36,8 @@ export default function IntroSlider() {
         if (currentIndex < slides.length - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
+            // Mark onboarding as complete before navigating to login
+            onboardingService.markComplete();
             router.push("/login");
         }
     };

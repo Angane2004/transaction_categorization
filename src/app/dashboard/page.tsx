@@ -14,6 +14,8 @@ import { IndianRupee, CreditCard, Activity, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { pinService } from "@/lib/localStorageService";
+import { Lock, X } from "lucide-react";
 
 const container = {
     hidden: { opacity: 0 },
@@ -39,6 +41,7 @@ export default function DashboardPage() {
     const [timePeriod, setTimePeriod] = useState<TimePeriod>("today");
     const [categories, setCategories] = useState<string[]>([]);
     const [showCategories, setShowCategories] = useState(false);
+    const [showPinReminder, setShowPinReminder] = useState(false);
     const { theme } = useTheme();
 
     useEffect(() => {
@@ -46,6 +49,12 @@ export default function DashboardPage() {
         const session = authService.getSession();
         const userId = session?.phone.replace(/\+/g, '');
         initializeData(userId);
+        
+        // Check if PIN is set
+        if (userId) {
+            const hasPin = pinService.exists(userId);
+            setShowPinReminder(!hasPin);
+        }
     }, []);
 
     const fetchData = useCallback(() => {
@@ -178,6 +187,45 @@ export default function DashboardPage() {
                     </Link>
                 </div>
             </motion.div>
+
+            {/* PIN Reminder Banner */}
+            {showPinReminder && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between gap-4"
+                >
+                    <div className="flex items-center gap-3 flex-1">
+                        <div className="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+                            <Lock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
+                                Add PIN lock to secure your app
+                            </h3>
+                            <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                                Set up a 4-digit PIN in Settings to protect your financial data
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link href="/dashboard/settings">
+                            <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                                Setup PIN
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setShowPinReminder(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Categories Dialog */}
             <CategoriesDialog 
