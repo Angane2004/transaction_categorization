@@ -37,7 +37,16 @@ export default function LoadingPage() {
     useEffect(() => {
         if (progress >= 100) {
             const timeout = setTimeout(() => {
-                router.push("/setup");
+                // Check if profile is complete
+                const session = authService.getSession();
+                const userId = session?.phone.replace(/\+/g, '');
+                const profile = userService.getProfile(userId);
+                
+                if (!profile || !profile.fullName) {
+                    router.push("/setup");
+                } else {
+                    router.push("/dashboard");
+                }
             }, 500); // Small delay to ensure smooth transition
 
             return () => clearTimeout(timeout);
@@ -45,14 +54,14 @@ export default function LoadingPage() {
     }, [progress, router]);
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-background p-6">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 sm:p-6">
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
                 className="flex flex-col items-center w-full max-w-md"
             >
-                <div className="relative w-32 h-32 mb-8">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 mb-6 sm:mb-8">
                     <motion.div
                         className="absolute inset-0 border-4 border-primary rounded-full"
                         animate={{
@@ -68,19 +77,21 @@ export default function LoadingPage() {
                         }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold text-primary">AI</span>
+                        <span className="text-xl sm:text-2xl font-bold text-primary">AI</span>
                     </div>
                 </div>
 
-                <h2 className="text-2xl font-bold mb-2 text-center">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 text-center px-4">
                     Analyzing your Finance Dashboard...
                 </h2>
-                <p className="text-muted-foreground mb-8 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 text-center px-4">
                     Categorizing transactions and setting up your profile.
                 </p>
 
-                <Progress value={progress} className="w-full h-2" />
-                <p className="mt-2 text-sm text-muted-foreground">{Math.round(progress)}%</p>
+                <div className="w-full max-w-xs sm:max-w-sm px-4">
+                    <Progress value={progress} className="w-full h-1.5 sm:h-2" />
+                    <p className="mt-2 text-xs sm:text-sm text-muted-foreground text-center">{Math.round(progress)}%</p>
+                </div>
             </motion.div>
         </div>
     );

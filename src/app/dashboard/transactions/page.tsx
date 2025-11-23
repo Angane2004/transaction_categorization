@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { transactionService, categoryService, Transaction, authService } from "@/lib/localStorageService";
+import { transactionService, categoryService, Transaction, authService, downloadService, DownloadRecord } from "@/lib/localStorageService";
 import { Download, FileText, FileSpreadsheet, FileJson, Filter, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -143,6 +143,22 @@ export default function TransactionsPage() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+
+        // Save download record
+        const session = authService.getSession();
+        const userId = session?.phone.replace(/\+/g, '');
+        const downloadRecord: DownloadRecord = {
+            id: `download_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            filename,
+            format: exportFormat,
+            fileSize: blob.size,
+            fileContent: content,
+            mimeType,
+            downloadDate: new Date().toISOString(),
+            transactionCount: filteredTransactions.length,
+            period: selectedPeriod,
+        };
+        downloadService.save(downloadRecord, userId);
 
         toast.success(`Data exported as ${exportFormat.toUpperCase()}`);
     };

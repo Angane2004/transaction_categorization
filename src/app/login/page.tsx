@@ -108,7 +108,8 @@ export default function LoginPage() {
                 authService.saveSession(formattedPhone);
 
                 toast.success("Login Successful!");
-                router.push("/loading");
+                // Navigate directly to setup page
+                router.push("/setup");
             } else {
                 toast.error("Incorrect OTP");
                 // Shake animation could be added here

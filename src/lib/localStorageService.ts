@@ -48,6 +48,18 @@ const getUserKey = (baseKey: string, userId?: string): string => {
     return baseKey;
 };
 
+export interface DownloadRecord {
+    id: string;
+    filename: string;
+    format: 'csv' | 'json' | 'xlsx';
+    fileSize: number;
+    fileContent: string;
+    mimeType: string;
+    downloadDate: string;
+    transactionCount: number;
+    period?: string;
+}
+
 const STORAGE_KEYS = {
     USER_PROFILE: 'transactai_user_profile',
     TRANSACTIONS: 'transactai_transactions',
@@ -55,6 +67,7 @@ const STORAGE_KEYS = {
     PIN: 'transactai_pin',
     AUTH_SESSION: 'transactai_auth_session',
     ONBOARDING_COMPLETE: 'transactai_onboarding_complete',
+    DOWNLOADS: 'transactai_downloads',
 };
 
 // User Profile Operations
@@ -277,6 +290,87 @@ export const generateSimulatedTransactions = (count: number = 50): Transaction[]
     const transactions: Transaction[] = [];
     const now = new Date();
 
+    // Define specific transactions template (will be randomly distributed)
+    const specificTransactionsTemplate: Array<{
+        description: string;
+        amount: number;
+        category: string;
+        recipient: string;
+        type: 'debit' | 'credit';
+    }> = [
+        {
+            description: '₹4331 for Netflix',
+            amount: 4331,
+            category: 'Entertainment',
+            recipient: 'Netflix',
+            type: 'debit',
+        },
+        {
+            description: '₹2389 for Ravi Contractor',
+            amount: 2389,
+            category: 'Bills & Utilities',
+            recipient: 'Ravi Contractor',
+            type: 'debit',
+        },
+        {
+            description: '₹4301 paid at Amazon via Google Pay',
+            amount: 4301,
+            category: 'Shopping',
+            recipient: 'Amazon',
+            type: 'debit',
+        },
+        {
+            description: '₹4406 received from Netmeds',
+            amount: 4406,
+            category: 'Healthcare',
+            recipient: 'Netmeds',
+            type: 'credit',
+        },
+        {
+            description: '₹3683 paid using UPI to Myntra',
+            amount: 3683,
+            category: 'Shopping',
+            recipient: 'Myntra',
+            type: 'debit',
+        },
+        {
+            description: '₹3980 received from Dominos',
+            amount: 3980,
+            category: 'Food & Dining',
+            recipient: 'Dominos',
+            type: 'credit',
+        },
+        {
+            description: '₹2768 paid using UPI to Big Bazaar',
+            amount: 2768,
+            category: 'Groceries',
+            recipient: 'Big Bazaar',
+            type: 'debit',
+        },
+        {
+            description: '₹2518 paid using UPI to HP Petrol Pump',
+            amount: 2518,
+            category: 'Transportation',
+            recipient: 'HP Petrol Pump',
+            type: 'debit',
+        },
+        {
+            description: '₹4789 debited for purchase at Harsh',
+            amount: 4789,
+            category: 'Shopping',
+            recipient: 'Harsh',
+            type: 'debit',
+        },
+        {
+            description: '₹1319 charged at Rapido',
+            amount: 1319,
+            category: 'Transportation',
+            recipient: 'Rapido',
+            type: 'debit',
+        },
+    ];
+
+    // Generate all random transactions first
     for (let i = 0; i < count; i++) {
         const daysAgo = Math.floor(Math.random() * 90); // Last 90 days
         const date = new Date(now);
@@ -300,10 +394,79 @@ export const generateSimulatedTransactions = (count: number = 50): Transaction[]
         });
     }
 
+    // Randomly replace some transactions with specific ones
+    // Randomly select how many specific transactions to include (between 5-10)
+    const numSpecificToInclude = Math.floor(Math.random() * 6) + 5; // 5 to 10
+    const shuffledSpecific = [...specificTransactionsTemplate].sort(() => Math.random() - 0.5);
+    const selectedSpecific = shuffledSpecific.slice(0, numSpecificToInclude);
+
+    // Randomly replace transactions with specific ones
+    const indicesToReplace = new Set<number>();
+    while (indicesToReplace.size < selectedSpecific.length && indicesToReplace.size < transactions.length) {
+        indicesToReplace.add(Math.floor(Math.random() * transactions.length));
+    }
+
+    let specificIndex = 0;
+    indicesToReplace.forEach((index) => {
+        if (specificIndex < selectedSpecific.length) {
+            const specific = selectedSpecific[specificIndex];
+            const daysAgo = Math.floor(Math.random() * 90); // Random date within last 90 days
+            const date = new Date(now);
+            date.setDate(date.getDate() - daysAgo);
+            date.setHours(Math.floor(Math.random() * 24));
+            date.setMinutes(Math.floor(Math.random() * 60));
+
+            transactions[index] = {
+                id: `txn_specific_${Date.now()}_${specificIndex}`,
+                description: specific.description,
+                amount: specific.amount,
+                category: specific.category,
+                date: date.toISOString(),
+                recipient: specific.recipient,
+                type: specific.type,
+            };
+            specificIndex++;
+        }
+    });
+
     // Sort by date (newest first)
     transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return transactions;
+};
+
+// Download Operations
+export const downloadService = {
+    save(download: DownloadRecord, userId?: string): void {
+        if (typeof window === 'undefined') return;
+        const downloads = this.getAll(userId);
+        downloads.unshift(download); // Add to beginning
+        // Keep only last 50 downloads
+        const limited = downloads.slice(0, 50);
+        const key = getUserKey(STORAGE_KEYS.DOWNLOADS, userId);
+        localStorage.setItem(key, JSON.stringify(limited));
+    },
+
+    getAll(userId?: string): DownloadRecord[] {
+        if (typeof window === 'undefined') return [];
+        const key = getUserKey(STORAGE_KEYS.DOWNLOADS, userId);
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+    },
+
+    delete(id: string, userId?: string): void {
+        if (typeof window === 'undefined') return;
+        const downloads = this.getAll(userId);
+        const filtered = downloads.filter(d => d.id !== id);
+        const key = getUserKey(STORAGE_KEYS.DOWNLOADS, userId);
+        localStorage.setItem(key, JSON.stringify(filtered));
+    },
+
+    clear(userId?: string): void {
+        if (typeof window === 'undefined') return;
+        const key = getUserKey(STORAGE_KEYS.DOWNLOADS, userId);
+        localStorage.removeItem(key);
+    },
 };
 
 // Initialize with simulated data if no data exists (per user)

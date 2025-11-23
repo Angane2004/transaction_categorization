@@ -12,23 +12,56 @@ export function NotificationSimulator({ onTransactionAdded }: { onTransactionAdd
     const [pendingTransaction, setPendingTransaction] = useState<{ amount: number; receiver: string } | null>(null);
 
     const simulateTransaction = () => {
-        const isBusiness = Math.random() > 0.5;
-        const amount = Math.floor(Math.random() * 5000) + 100;
-        const receiver = isBusiness ? "Amazon India" : "Ramesh Kumar";
+        // Specific transactions that can be randomly selected
+        const specificTransactions = [
+            { description: '₹4331 for Netflix', amount: 4331, receiver: 'Netflix', category: 'Entertainment', isBusiness: true },
+            { description: '₹2389 for Ravi Contractor', amount: 2389, receiver: 'Ravi Contractor', category: 'Bills & Utilities', isBusiness: false },
+            { description: '₹4301 paid at Amazon via Google Pay', amount: 4301, receiver: 'Amazon', category: 'Shopping', isBusiness: true },
+            { description: '₹4406 received from Netmeds', amount: 4406, receiver: 'Netmeds', category: 'Healthcare', isBusiness: true },
+            { description: '₹3683 paid using UPI to Myntra', amount: 3683, receiver: 'Myntra', category: 'Shopping', isBusiness: true },
+            { description: '₹3980 received from Dominos', amount: 3980, receiver: 'Dominos', category: 'Food & Dining', isBusiness: true },
+            { description: '₹2768 paid using UPI to Big Bazaar', amount: 2768, receiver: 'Big Bazaar', category: 'Groceries', isBusiness: true },
+            { description: '₹2518 paid using UPI to HP Petrol Pump', amount: 2518, receiver: 'HP Petrol Pump', category: 'Transportation', isBusiness: true },
+            { description: '₹4789 debited for purchase at Harsh', amount: 4789, receiver: 'Harsh', category: 'Shopping', isBusiness: false },
+            { description: '₹1319 charged at Rapido', amount: 1319, receiver: 'Rapido', category: 'Transportation', isBusiness: true },
+        ];
+
+        // 30% chance to use specific transaction, 70% chance for random
+        const useSpecific = Math.random() < 0.3;
+        
+        let amount: number;
+        let receiver: string;
+        let category: string;
+        let isBusiness: boolean;
+
+        if (useSpecific && specificTransactions.length > 0) {
+            // Randomly pick a specific transaction
+            const selected = specificTransactions[Math.floor(Math.random() * specificTransactions.length)];
+            amount = selected.amount;
+            receiver = selected.receiver;
+            category = selected.category;
+            isBusiness = selected.isBusiness;
+        } else {
+            // Generate random transaction
+            isBusiness = Math.random() > 0.5;
+            amount = Math.floor(Math.random() * 5000) + 100;
+            receiver = isBusiness ? "Amazon India" : "Ramesh Kumar";
+            category = isBusiness ? "Shopping" : "Personal";
+        }
 
         // Simulate receiving a transaction
         // In a real app, this would come from a background service reading SMS
 
         if (isBusiness) {
             toast.success(`Transaction Categorized Successfully`, {
-                description: `Paid ₹${amount} to ${receiver}. Category: Shopping`,
+                description: `Paid ₹${amount} to ${receiver}. Category: ${category}`,
                 action: {
                     label: "View",
                     onClick: () => console.log("View transaction"),
                 },
             });
             // Auto-save to backend simulation
-            saveTransaction(amount, receiver, "Shopping");
+            saveTransaction(amount, receiver, category);
         } else {
             // Show dialog for personal transactions
             setPendingTransaction({ amount, receiver });

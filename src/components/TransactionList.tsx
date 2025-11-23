@@ -50,7 +50,7 @@ export const TransactionList = memo(function TransactionList({ transactions }: {
                                         {txn.type === 'credit' ? '+' : '-'}₹{txn.amount?.toFixed(2) || "0.00"}
                                     </span>
                                     <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary mt-1">
-                                        {txn.category}
+                                        for {txn.category}
                                     </span>
                                 </div>
                             </motion.div>

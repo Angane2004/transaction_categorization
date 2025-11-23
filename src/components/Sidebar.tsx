@@ -11,8 +11,9 @@ import {
     LogOut,
     Menu,
     Receipt,
+    Download,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { authService } from "@/lib/localStorageService";
 import { useRouter } from "next/navigation";
@@ -42,12 +43,24 @@ const routes = [
         href: "/dashboard/settings",
         color: "text-pink-700",
     },
+    {
+        label: "Downloads",
+        icon: Download,
+        href: "/dashboard/downloads",
+        color: "text-blue-600",
+    },
 ];
 
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Fix hydration error by only rendering Sheet on client
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleLogout = () => {
         const session = authService.getSession();
@@ -55,7 +68,9 @@ export default function Sidebar() {
             // Clear user-specific unlock flag
             const phone = session.phone.replace(/\+/g, "");
             const unlockKey = `app_unlocked_${phone}`;
-            sessionStorage.removeItem(unlockKey);
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem(unlockKey);
+            }
         }
         authService.clearSession();
         router.push("/login");
@@ -64,28 +79,40 @@ export default function Sidebar() {
     return (
         <>
             {/* Mobile Sidebar */}
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetTrigger asChild>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="md:hidden fixed top-4 right-4 z-50 bg-background/95 backdrop-blur-sm border shadow-lg hover:bg-background dark:bg-gray-900 dark:border-gray-700"
-                        aria-label="Open menu"
+            {mounted ? (
+                <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                    <SheetTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="md:hidden fixed top-4 right-4 z-50 bg-background/95 backdrop-blur-sm border shadow-lg hover:bg-background dark:bg-gray-900 dark:border-gray-700"
+                            aria-label="Open menu"
+                        >
+                            <Menu className="h-6 w-6 text-foreground" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent 
+                        side="right" 
+                        className="p-0 w-72 bg-gray-900 text-black data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     >
-                        <Menu className="h-6 w-6 text-foreground" />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent 
-                    side="right" 
-                    className="p-0 w-72 bg-gray-900 text-black data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                        <SidebarContent pathname={pathname} onLogout={handleLogout} setIsOpen={setIsOpen} />
+                    </SheetContent>
+                </Sheet>
+            ) : (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="md:hidden fixed top-4 right-4 z-50 bg-background/95 backdrop-blur-sm border shadow-lg hover:bg-background dark:bg-gray-900 dark:border-gray-700"
+                    aria-label="Open menu"
+                    suppressHydrationWarning
                 >
-                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                    <SidebarContent pathname={pathname} onLogout={handleLogout} setIsOpen={setIsOpen} />
-                </SheetContent>
-            </Sheet>
+                    <Menu className="h-6 w-6 text-foreground" />
+                </Button>
+            )}
 
             {/* Desktop Sidebar */}
-            <div className="hidden md:flex h-full w-72 flex-col fixed inset-y-0 z-50 bg-gray-900 text-white">
+            <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80] bg-gray-900 text-white">
                 <SidebarContent pathname={pathname} onLogout={handleLogout} />
             </div>
         </>
